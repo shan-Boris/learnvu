@@ -15,28 +15,94 @@
       {{ name }}
     </div>
     <div className="item_pd_btnBar" v-if="ProductDefinations.length > 1">
-      <div
-        v-for="pd of ProductDefinations"
-        @click="() => setActivePD(pd)"
-        :class="
+      <!-- :class="
           pd.id === activPD.id
             ? 'pd_btn pd_btn_active'
             : 'pd_btn pd_btn_passive'
-        "
+        " -->
+      <div
+        v-for="pd of ProductDefinations"
+        @click="setActivePD(pd)"
+        :class="{
+          'pd_btn pd_btn_active': pd.id === activPD.id,
+          'pd_btn pd_btn_passive': pd.id !== activPD.id,
+        }"
         :key="pd.id"
       >
         <!-- onClick={() => choosePd(i)} -->
         {{ pd.name_variant }}
       </div>
     </div>
-    {basketBtn}
+    <div
+      v-if="!store.getters.productsInOrder.find((v:any) => v.idPD === activPD.id)"
+      title="Добавить в корзину"
+      className="item_basket rose_btn"
+      @click="addInBasket"
+    >
+      <svg viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M17.4 5.69995L15.3 17.5999H3.69998L1.59998 5.69995H17.4Z"
+          strokeMiterlimit="10"
+        />
+        <path
+          d="M12.9 5.6999C12.9 3.5999 11.9 1.3999 9.49998 1.3999C7.09998 1.3999 6.09998 3.4999 6.09998 5.6999"
+          strokeMiterlimit="10"
+        />
+      </svg>
+
+      <span>В корзину</span>
+    </div>
+    <router-link
+      to="/newOrder"
+      v-else
+      title="Перейти в корзину"
+      className="item_basket rose_btn item_basket_active"
+    >
+      <div class="item_basket_img">
+        <svg viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.4 5.69995L15.3 17.5999H3.69998L1.59998 5.69995H17.4Z"
+            strokeMiterlimit="10"
+          />
+          <path
+            d="M12.9 5.6999C12.9 3.5999 11.9 1.3999 9.49998 1.3999C7.09998 1.3999 6.09998 3.4999 6.09998 5.6999"
+            strokeMiterlimit="10"
+          />
+        </svg>
+      </div>
+
+      <span>В корзине</span>
+    </router-link>
   </div>
 </template>
 
 <script setup lang="ts">
 import { TProductDefinationsBase } from "@/store";
-import { TProduct } from "@/store";
+import { TProduct, TProductInOrder } from "@/store";
 import { PropType, defineProps, onUpdated, reactive, ref, toRefs } from "vue";
+import { useStore } from "vuex";
+
+// const basketBtn = orderStore.productsInOrder
+//       .map((v) => v.idPD)
+//       .includes(activPD?.id ?? 0) ? (
+//       <Link to={"/newOrder"} title="Перейти в корзину">
+//         <div className="item_basket rose_btn item_basket_active">
+//           <div className="item_basket_img">{basketSVG}</div>
+//           <span>В корзине</span>
+//         </div>
+//       </Link>
+//     ) : (
+//       <div
+//         title="Добавить в корзину"
+//         className="item_basket rose_btn"
+//         onClick={addInBasket}
+//       >
+//         {basketSVG}
+
+//         <span>В корзину</span>
+//       </div>
+//     );
+const store = useStore();
 
 const props = defineProps({
   product: {
@@ -53,6 +119,26 @@ let {
 const activPD = ref(ProductDefinations[0]);
 const setActivePD = (newActivPD: TProductDefinationsBase & { id: number }) => {
   activPD.value = newActivPD;
+};
+
+const addInBasket = () => {
+  const newProductsInOrder: (TProductInOrder & { idPD: number })[] = [
+    ...store.getters.productsInOrder,
+    {
+      idPD: activPD.value.id,
+      amount: 1,
+      name,
+      price: activPD.value.price,
+    },
+  ];
+  store.dispatch("updateProductsInOrder", newProductsInOrder);
+  console.log(
+    !store.getters.productsInOrder.find((v: any) => {
+      console.log(v.idPD);
+      console.log(activPD.value.id);
+      return v.id === activPD.value.id;
+    })
+  );
 };
 // const activPD = ProductDefinations[0];
 onUpdated(() => {
@@ -153,5 +239,13 @@ onUpdated(() => {
   background-color: var(--color-forBtn);
   color: #fff;
   stroke: #fff;
+}
+.rose_btn {
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-forBtn);
+  -webkit-transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease-in-out;
+  padding: 7px;
+  cursor: pointer;
 }
 </style>

@@ -23,10 +23,25 @@ export type TProductDefinationsBase = {
   photos: string[];
   is_need_del: boolean;
 };
+export type TProductInOrder = {
+  /** refOnProduct = idProd */
+  refOnProduct: string;
+  name: string;
+  photos: string[];
+  price: number;
+  amount: number;
+  total_price: number;
+  description: string;
+  /** component name: amount */
+  components: {
+    [key: string]: number;
+  };
+};
 export type TState = {
   categories: TCategory[];
   categoryId?: string;
   products: TProduct[];
+  productsInOrder: (TProductInOrder & { idPD: number })[];
 };
 
 export default createStore<TState>({
@@ -34,6 +49,7 @@ export default createStore<TState>({
     categories: [],
     products: [],
     categoryId: undefined,
+    productsInOrder: [],
   },
   getters: {
     allCategories: (state: TState) => {
@@ -44,6 +60,9 @@ export default createStore<TState>({
     },
     categoryId: (state: TState) => {
       return state.categoryId;
+    },
+    productsInOrder: (state: TState) => {
+      return state.productsInOrder;
     },
   },
   mutations: {
@@ -57,8 +76,21 @@ export default createStore<TState>({
       state.categoryId = payload.categoryId;
       state.products = payload.newProducts;
     },
+    updateProductsInOrder(
+      state: TState,
+      payload: { newProducts: (TProductInOrder & { idPD: number })[] }
+    ) {
+      state.productsInOrder = payload.newProducts;
+    },
   },
   actions: {
+    updateProductsInOrder(
+      { commit },
+      newProducts: (TProductInOrder & { idPD: number })[]
+    ) {
+      console.log("new", newProducts);
+      commit("updateProductsInOrder", { newProducts });
+    },
     async fetchCategories({ commit }) {
       const res = await fetch("https://rozalux-bratsk.ru/api/categories");
       const categories = await res.json();
